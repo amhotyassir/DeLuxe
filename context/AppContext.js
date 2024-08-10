@@ -1,6 +1,7 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import { database } from '../services/firebaseConfig';
-import { ref, onValue, update, set } from 'firebase/database';
+import { database, storage } from '../services/firebaseConfig';
+import { ref as dbRef, onValue, set, update } from 'firebase/database';
+import { ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 
 // Create the context
 const AppContext = createContext();
@@ -11,10 +12,11 @@ export const AppProvider = ({ children }) => {
   const [deliveredOrders, setDeliveredOrders] = useState([]);
   const [deletedOrders, setDeletedOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [services, setServices] = useState({});
 
   useEffect(() => {
     // Listen for changes in the orders node
-    const ordersRef = ref(database, 'orders');
+    const ordersRef = dbRef(database, 'orders');
     onValue(ordersRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
@@ -26,7 +28,7 @@ export const AppProvider = ({ children }) => {
     });
 
     // Listen for changes in the delivered node
-    const deliveredRef = ref(database, 'delivered');
+    const deliveredRef = dbRef(database, 'delivered');
     onValue(deliveredRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
@@ -37,13 +39,24 @@ export const AppProvider = ({ children }) => {
     });
 
     // Listen for changes in the deleted node
-    const deletedRef = ref(database, 'deleted');
+    const deletedRef = dbRef(database, 'deleted');
     onValue(deletedRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
         setDeletedOrders(Object.keys(data).map(key => ({ id: key, ...data[key] })));
       } else {
         setDeletedOrders([]);
+      }
+    });
+
+    // Listen for changes in the services node
+    const servicesRef = dbRef(database, 'services');
+    onValue(servicesRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        setServices(data);
+      } else {
+        setServices({});
       }
     });
   }, []);
@@ -53,45 +66,76 @@ export const AppProvider = ({ children }) => {
       // Move order to delivered orders
       const order = orders.find(o => o.id === orderId);
       if (order) {
-        set(ref(database, `delivered/${orderId}`), { ...order, status });
+        set(dbRef(database, `delivered/${orderId}`), { ...order, status });
         setOrders(orders.filter(o => o.id !== orderId));
-        set(ref(database, `orders/${orderId}`), null); // Remove from orders
+        set(dbRef(database, `orders/${orderId}`), null); // Remove from orders
+      }
+    } else if (status === 'Deleted') {
+      // Move order to deleted orders
+      const order = orders.find(o => o.id === orderId);
+      if (order) {
+        set(dbRef(database, `deleted/${orderId}`), { ...order, status });
+        setOrders(orders.filter(o => o.id !== orderId));
+        set(dbRef(database, `orders/${orderId}`), null); // Remove from orders
       }
     } else {
-      update(ref(database, `orders/${orderId}`), { status });
+      update(dbRef(database, `orders/${orderId}`), { status });
     }
   };
 
-  const addDeleted = (order) => {
-    return new Promise((resolve, reject) => {
-      set(ref(database, `deleted/${order.id}`), { ...order, status: 'Deleted' })
-        .then(() => {
-          setOrders(orders.filter(o => o.id !== order.id));
-          set(ref(database, `orders/${order.id}`), null); // Remove from orders
-          resolve();
-        })
-        .catch(reject);
-    });
+  const addService = async (serviceName, servicePrice, pricingType, imageUri) => {
+    const newService = {
+      name: serviceName,
+      price: servicePrice,
+      type: pricingType
+    };
+
+    const newServiceKey = `service_${Date.now()}`;
+    if (imageUri) {
+      const imageRef = storageRef(storage, `services/${newServiceKey}`);
+      const response = await fetch(imageUri);
+      const blob = await response.blob();
+      await uploadBytes(imageRef, blob);
+      newService.imageUrl = await getDownloadURL(imageRef);
+    }
+    set(dbRef(database, `services/${newServiceKey}`), newService);
   };
 
-  const addOrder = (order) => {
-    return new Promise((resolve, reject) => {
-      set(ref(database, `orders/${order.id}`), order)
-        .then(resolve)
-        .catch(reject);
-    });
+  const updateService = async (serviceId, serviceData) => {
+    if (serviceData.imageUri) {
+      // console.log('here in updated service', serviceData)
+
+      const imageRef = storageRef(storage, `services/${serviceId}`);
+      const response = await fetch(serviceData.imageUri);
+      const blob = await response.blob();
+      await uploadBytes(imageRef, blob);
+      serviceData.imageUrl = await getDownloadURL(imageRef);
+
+      delete serviceData.imageUri;
+      set(dbRef(database, `services/${serviceId}/imageUrl`), serviceData.imageUrl)
+    }
+
+    else{
+      update(dbRef(database, `services/${serviceId}`), serviceData);
+    }
+    
   };
 
-  const updateOrder = (order) => {
-    return new Promise((resolve, reject) => {
-      update(ref(database, `orders/${order.id}`), order)
-        .then(resolve)
-        .catch(reject);
-    });
+  const removeService = (serviceId) => {
+    
+    if (services[serviceId].imageUrl){
+      // console.log(services[serviceId])
+      const imageRef = storageRef(storage, `services/${serviceId}`);
+      deleteObject(imageRef).catch((error) => {
+        console.error('Failed to delete image:', error);
+      });
+    }
+    
+    set(dbRef(database, `services/${serviceId}`), null);
   };
 
   return (
-    <AppContext.Provider value={{ orders, deliveredOrders, deletedOrders, updateOrderStatus, addDeleted, addOrder, updateOrder, loading }}>
+    <AppContext.Provider value={{ orders, deliveredOrders, deletedOrders, updateOrderStatus, loading, services, addService, updateService, removeService }}>
       {children}
     </AppContext.Provider>
   );
