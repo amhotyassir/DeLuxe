@@ -1,6 +1,6 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { database } from '../services/firebaseConfig';
-import { ref, onValue, set, remove } from 'firebase/database';
+import { ref, onValue, update, set } from 'firebase/database';
 
 // Create the context
 const AppContext = createContext();
@@ -49,35 +49,49 @@ export const AppProvider = ({ children }) => {
   }, []);
 
   const updateOrderStatus = (orderId, status) => {
-    if (status === 'Delivered' || status === 'Deleted') {
-      // Move order to delivered or deleted orders
+    if (status === 'Delivered') {
+      // Move order to delivered orders
       const order = orders.find(o => o.id === orderId);
       if (order) {
-        if (status === 'Delivered') {
-          set(ref(database, `delivered/${orderId}`), { ...order, status });
-        } else {
-          set(ref(database, `deleted/${orderId}`), { ...order, status });
-        }
+        set(ref(database, `delivered/${orderId}`), { ...order, status });
         setOrders(orders.filter(o => o.id !== orderId));
-        remove(ref(database, `orders/${orderId}`)); // Remove from orders
+        set(ref(database, `orders/${orderId}`), null); // Remove from orders
       }
     } else {
-      set(ref(database, `orders/${orderId}`), { ...orders.find(o => o.id === orderId), status });
+      update(ref(database, `orders/${orderId}`), { status });
     }
   };
 
-  const addOrder = (newOrder) => {
-    const newOrderId = `order_${Date.now()}`;
-    return set(ref(database, `orders/${newOrderId}`), { ...newOrder, id: newOrderId });
+  const addDeleted = (order) => {
+    return new Promise((resolve, reject) => {
+      set(ref(database, `deleted/${order.id}`), { ...order, status: 'Deleted' })
+        .then(() => {
+          setOrders(orders.filter(o => o.id !== order.id));
+          set(ref(database, `orders/${order.id}`), null); // Remove from orders
+          resolve();
+        })
+        .catch(reject);
+    });
   };
 
-  const addDeleted = (order) => {
-    return set(ref(database, `deleted/${order.id}`), { ...order, status: 'Deleted' })
-      .then(() => remove(ref(database, `orders/${order.id}`))); // Remove from orders
+  const addOrder = (order) => {
+    return new Promise((resolve, reject) => {
+      set(ref(database, `orders/${order.id}`), order)
+        .then(resolve)
+        .catch(reject);
+    });
+  };
+
+  const updateOrder = (order) => {
+    return new Promise((resolve, reject) => {
+      update(ref(database, `orders/${order.id}`), order)
+        .then(resolve)
+        .catch(reject);
+    });
   };
 
   return (
-    <AppContext.Provider value={{ orders, deliveredOrders, deletedOrders, updateOrderStatus, addOrder, addDeleted, loading }}>
+    <AppContext.Provider value={{ orders, deliveredOrders, deletedOrders, updateOrderStatus, addDeleted, addOrder, updateOrder, loading }}>
       {children}
     </AppContext.Provider>
   );

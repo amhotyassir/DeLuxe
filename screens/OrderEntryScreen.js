@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Modal, Dimensions } from 'react-native';
+import React, { useState, useLayoutEffect } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Modal, Dimensions, ScrollView } from 'react-native';
 import RNPickerSelect from 'react-native-picker-select';
 import { Ionicons } from '@expo/vector-icons';
 import { WebView } from 'react-native-webview';
@@ -13,8 +13,20 @@ const OrderEntryScreen = ({ navigation }) => {
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [customerLocation, setCustomerLocation] = useState('');
-  const [service, setService] = useState('');
+  const [services, setServices] = useState([]);
+  const [serviceDetails, setServiceDetails] = useState({});
   const [modalVisible, setModalVisible] = useState(false);
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity style={styles.addButton} onPress={handleAddOrder}>
+          <Ionicons name="add-circle" size={20} color="white" />
+          <Text style={styles.buttonText}>Add Order</Text>
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation, handleAddOrder]);
 
   const getCurrentLocation = async () => {
     let { status } = await Location.requestForegroundPermissionsAsync();
@@ -32,12 +44,13 @@ const OrderEntryScreen = ({ navigation }) => {
   const resetForm = () => {
     setCustomerName('');
     setCustomerPhone('');
-    setService('');
+    setServices([]);
+    setServiceDetails({});
     setCustomerLocation('');
   };
 
   const handleAddOrder = () => {
-    if (!customerName || !customerPhone || !customerLocation || !service) {
+    if (!customerName || !customerPhone || !customerLocation || services.length === 0) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
@@ -51,7 +64,7 @@ const OrderEntryScreen = ({ navigation }) => {
       name: customerName,
       phone: customerPhone,
       location: customerLocation,
-      services: { [service]: true },
+      services: serviceDetails,
       status: 'New',
       orderDate: new Date().toISOString(),
     };
@@ -60,7 +73,7 @@ const OrderEntryScreen = ({ navigation }) => {
       .then(() => {
         Alert.alert('Success', 'Order added successfully');
         resetForm();
-        navigation.navigate('OrderList', { refresh: true });
+        navigation.navigate('OrderList', { refresh: true }); // Pass a refresh parameter
       })
       .catch((error) => {
         Alert.alert('Error', 'Failed to add order');
@@ -68,8 +81,15 @@ const OrderEntryScreen = ({ navigation }) => {
       });
   };
 
+  const handleServiceChange = (service, value) => {
+    setServiceDetails((prevDetails) => ({
+      ...prevDetails,
+      [service]: value,
+    }));
+  };
+
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       <Text style={styles.label}>Customer Name</Text>
       <TextInput
         style={styles.input}
@@ -103,27 +123,40 @@ const OrderEntryScreen = ({ navigation }) => {
         <Text style={styles.buttonText}>Set Location</Text>
       </TouchableOpacity>
 
-      <Text style={styles.label}>Service</Text>
+      <Text style={styles.label}>Services</Text>
       <RNPickerSelect
-        onValueChange={(value) => setService(value)}
+        onValueChange={(value) => {
+          if (value) {
+            setServices((prevServices) => [...prevServices, value]);
+            setServiceDetails((prevDetails) => ({ ...prevDetails, [value]: '' }));
+          }
+        }}
         items={[
-          { label: 'Laundry', value: 'Laundry' },
-          { label: 'Dry Cleaning', value: 'Dry Cleaning' },
-          { label: 'Ironing', value: 'Ironing' },
-          { label: 'Others', value: 'Others' },
+          { label: 'Laundry (per item)', value: 'Laundry' },
+          { label: 'Dry Cleaning (per item)', value: 'Dry Cleaning' },
+          { label: 'Ironing (per item)', value: 'Ironing' },
+          { label: 'Carpet Cleaning (per sq ft)', value: 'Carpet Cleaning' },
         ]}
         style={pickerSelectStyles}
-        value={service}
+        value={null}
         placeholder={{
           label: 'Select a service...',
           value: null,
         }}
       />
 
-      <TouchableOpacity style={styles.button} onPress={handleAddOrder}>
-        <Ionicons name="add-circle" size={20} color="white" />
-        <Text style={styles.buttonText}>Add Order</Text>
-      </TouchableOpacity>
+      {services.map((service, index) => (
+        <View key={index} style={styles.serviceInputContainer}>
+          <Text style={styles.serviceLabel}>{service}</Text>
+          <TextInput
+            style={styles.input}
+            value={serviceDetails[service]}
+            onChangeText={(value) => handleServiceChange(service, value)}
+            placeholder={`Enter ${service.includes('sq ft') ? 'area in sq ft' : 'quantity'}`}
+            keyboardType="number-pad"
+          />
+        </View>
+      ))}
 
       <Modal
         animationType="slide"
@@ -149,7 +182,7 @@ const OrderEntryScreen = ({ navigation }) => {
           </View>
         </View>
       </Modal>
-    </View>
+    </ScrollView>
   );
 };
 
@@ -158,6 +191,20 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
     backgroundColor: '#fff',
+  },
+  addButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#2196F3',
+    borderRadius: 8,
+    padding: 8,
+    marginRight: 10,
+  },
+  buttonText: {
+    color: 'white',
+    marginLeft: 8,
+    fontSize: 16,
   },
   label: {
     fontSize: 16,
@@ -171,14 +218,6 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 16,
   },
-  button: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#2196F3',
-    borderRadius: 8,
-    padding: 16,
-  },
   locationButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -188,10 +227,13 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 16,
   },
-  buttonText: {
-    color: 'white',
-    marginLeft: 8,
+  serviceInputContainer: {
+    marginBottom: 16,
+  },
+  serviceLabel: {
     fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 4,
   },
   modalContainer: {
     flex: 1,
@@ -223,6 +265,11 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 16,
     marginTop: 16,
+  },
+  buttonText: {
+    color: 'white',
+    marginLeft: 8,
+    fontSize: 16,
   },
 });
 

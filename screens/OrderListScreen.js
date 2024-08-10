@@ -20,7 +20,7 @@ const OrderListScreen = ({ navigation }) => {
     navigation.setOptions({
       headerRight: () => (
         <View style={styles.pickerWrapper}>
-          <Text style={styles.statusText}>{selectedStatus}</Text>
+          <Text>{selectedStatus}</Text>
           <RNPickerSelect
             onValueChange={(value) => setSelectedStatus(value)}
             items={[
@@ -29,11 +29,7 @@ const OrderListScreen = ({ navigation }) => {
               { label: 'Waiting', value: 'Waiting' },
               { label: 'Ready', value: 'Ready' },
             ]}
-            style={{
-              inputIOS: styles.input,
-              inputAndroid: styles.input,
-              iconContainer: styles.iconContainer,
-            }}
+            style={styles.pickerSelectStyles}
             value={selectedStatus}
           />
         </View>
@@ -72,7 +68,7 @@ const OrderListScreen = ({ navigation }) => {
       case 'Waiting':
         return '#A9A9A9'; // Dark Gray
       case 'Ready':
-        return '#1e90ff'; // Dodger Blue
+        return '#1e90ff'; // Light Blue
       default:
         return '#fff';
     }
@@ -83,7 +79,7 @@ const OrderListScreen = ({ navigation }) => {
       case 'New':
         return '#A9A9A9'; // Dark Gray (Waiting)
       case 'Waiting':
-        return '#1e90ff'; // Dodger Blue (Ready)
+        return '#1e90ff'; // Light Blue (Ready)
       case 'Ready':
         return '#32cd32'; // Lime Green (Delivered)
       default:
@@ -107,8 +103,7 @@ const OrderListScreen = ({ navigation }) => {
   const filteredOrders = filterOrders(selectedStatus);
 
   const toggleExpandOrder = (id, index) => {
-    setSelectedOrder(orders[index])
-    
+    setSelectedOrder(orders[index]);
     setExpandedOrders((prevExpandedOrders) => ({
       ...prevExpandedOrders,
       [id]: !prevExpandedOrders[id],
@@ -177,17 +172,14 @@ const OrderListScreen = ({ navigation }) => {
         keyExtractor={(item, index) => item.id}
         renderItem={({ item, index }) => (
           <View style={[
-              styles.customerItem, 
-              { 
-                borderLeftColor: getStatusColor(item.status),
-                backgroundColor: expandedOrders[item.id] ? '#f0f0f0' : '#fff',
-              }
-            ]}>
+            styles.customerItem,
+            { borderLeftColor: getStatusColor(item.status), backgroundColor: expandedOrders[item.id] ? '#f2f2f2' : '#fff' }
+          ]}>
             <View style={styles.header}>
               <Text style={styles.customerName}>{index + 1}. {item.name.length > 10 ? `${item.name.substring(0, 8)}...` : item.name}</Text>
               <View style={styles.headerRight}>
                 <Text style={[styles.status, { backgroundColor: getStatusColor(item.status) }]}>{item.status}</Text>
-                <TouchableOpacity onPress={() => toggleExpandOrder(item.id,index)}>
+                <TouchableOpacity onPress={() => toggleExpandOrder(item.id, index)}>
                   <Ionicons name={expandedOrders[item.id] ? "chevron-up" : "chevron-down"} size={24} color="blue" />
                 </TouchableOpacity>
               </View>
@@ -214,9 +206,13 @@ const OrderListScreen = ({ navigation }) => {
                   <Text style={styles.label}>Order Date:</Text>
                   <Text style={styles.value}>{formatDateTime(item.orderDate)}</Text>
                 </View>
+                <View style={styles.row}>
+                  <Text style={styles.label}>Status:</Text>
+                  <Text style={styles.value}>{item.status}</Text>
+                </View>
                 <View style={styles.actions}>
                   <TouchableOpacity
-                    style={[styles.button, { backgroundColor: '#FF0000', marginRight: 8 }]}
+                    style={[styles.button, { backgroundColor: '#FF0000', marginLeft: 8 }]}
                     onPress={() => handleDeleteOrder(item)}
                   >
                     <Ionicons name="trash" size={20} color="white" />
@@ -235,7 +231,7 @@ const OrderListScreen = ({ navigation }) => {
           </View>
         )}
       />
-      
+
       <Modal
         animationType="slide"
         transparent={true}
@@ -245,8 +241,7 @@ const OrderListScreen = ({ navigation }) => {
         <View style={styles.modalContainer}>
           <View style={styles.modalView}>
             {selectedOrder && (
-              <WebView source={{ uri: selectedOrder.location }} 
-              style={{ width: width * 0.9, height: height * 0.7 }} />
+              <WebView source={{ uri: selectedOrder.location }} style={{ width: width * 0.9, height: height * 0.7 }} />
             )}
             <TouchableOpacity
               style={styles.closeButton}
@@ -266,7 +261,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-    alignItems: 'center', // Center the content horizontally
+    alignItems: 'center',
   },
   noOrdersContainer: {
     flex: 1,
@@ -286,7 +281,7 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     borderRadius: 8,
     borderLeftWidth: 5,
-    width: itemWidth, // Use calculated width
+    width: itemWidth,
   },
   header: {
     flexDirection: 'row',
@@ -311,8 +306,8 @@ const styles = StyleSheet.create({
   },
   details: {
     marginTop: 8,
-    backgroundColor: '#f0f0f0', // Light gray background for expanded items
-    padding: 8,
+    backgroundColor: '#f2f2f2',
+    padding: 10,
     borderRadius: 8,
   },
   row: {
@@ -353,6 +348,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalView: {
     width: width * 0.9,
@@ -370,52 +366,54 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
   },
-  modalText: {
-    fontSize: 16,
-    marginVertical: 4,
-  },
-  boldText: {
-    fontWeight: 'bold',
-  },
   closeButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FF0000',
+    backgroundColor: '#2196F3',
     borderRadius: 8,
     padding: 16,
     marginTop: 16,
   },
-  webView: {
-    width: '100%',
-    height: '80%',
-    borderRadius: 10,
+  buttonText: {
+    color: 'white',
+    marginLeft: 8,
+    fontSize: 16,
   },
   pickerWrapper: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    alignItems: 'center',
     marginRight: 10,
-    maxWidth: 150,
+    minWidth: 100,
+    alignItems: 'center',
   },
-  input: {
-    fontSize: 16,
-    paddingVertical: 8,
-    paddingHorizontal: 8,
-    borderWidth: 1,
-    borderColor: 'gray',
-    borderRadius: 4,
-    color: 'black',
-    paddingRight: 30, // to ensure the text is never behind the icon
-    maxWidth: 150, // Maximum width for the picker
-  },
-  statusText: {
-    marginRight: 8,
-    fontSize: 16,
-  },
-  iconContainer: {
-    top: 10,
-    right: 12,
+  pickerSelectStyles: {
+    inputIOS: {
+      fontSize: 16,
+      paddingVertical: 8,
+      paddingHorizontal: 8,
+      borderWidth: 1,
+      borderColor: 'gray',
+      borderRadius: 4,
+      color: 'black',
+      paddingRight: 30,
+      maxWidth: 100,
+    },
+    inputAndroid: {
+      fontSize: 16,
+      paddingHorizontal: 8,
+      paddingVertical: 8,
+      borderWidth: 1,
+      borderColor: 'gray',
+      borderRadius: 4,
+      color: 'black',
+      paddingRight: 30,
+      maxWidth: 100,
+    },
+    iconContainer: {
+      top: 10,
+      right: 12,
+    },
   },
 });
 
