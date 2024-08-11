@@ -16,6 +16,7 @@ const ManageServices = () => {
   const [pricingType, setPricingType] = useState('perPiece');
   const [serviceImage, setServiceImage] = useState(null);
   const [editPrices, setEditPrices] = useState({});
+  const [editNames, setEditNames] = useState({});
   const [editServiceImages, setEditServiceImages] = useState({});
 
   const isDecimal = (value) => /^\d+(\.\d{1,2})?$/.test(value);
@@ -40,6 +41,7 @@ const ManageServices = () => {
     if (serviceData.price && !isDecimal(serviceData.price)) {
       Alert.alert('Error', 'Price must be a decimal value');
       setEditPrices((prevEditPrices) => ({ ...prevEditPrices, [serviceId]: services[serviceId].price }));
+      setEditNames((prevEditNames) => ({ ...prevEditNames, [serviceId]: services[serviceId].name }));
       return;
     }
     await updateService(serviceId, serviceData);
@@ -144,8 +146,8 @@ const ManageServices = () => {
           <View style={styles.serviceRow}>
             <TextInput
               style={styles.serviceName}
-              value={services[serviceId].name}
-              onChangeText={(name) => handleUpdateService(serviceId, { ...services[serviceId], name })}
+              value={editNames[serviceId] || services[serviceId].name}
+              onChangeText={(name) => setEditNames((prevEditNames) => ({ ...prevEditNames, [serviceId]: name }))}
             />
             <TextInput
               style={styles.servicePrice}
@@ -156,11 +158,24 @@ const ManageServices = () => {
             />
             <TouchableOpacity
               style={styles.saveButton}
-              
+              disabled={!(editNames[serviceId] || editPrices[serviceId] || editServiceImages[serviceId] ) }
               onPress={() => handleUpdateService(serviceId, { ...services[serviceId], price: editPrices[serviceId], imageUri: editServiceImages[serviceId]})}
             >
-              <Ionicons name="checkmark-circle" size={20} color="green"  />
+              <Ionicons name="checkmark-circle" size={20} color={(editNames[serviceId] || editPrices[serviceId] || editServiceImages[serviceId] )? 'green': 'lightgray'}  />
             </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.saveButton}
+              disabled={!(editNames[serviceId] || editPrices[serviceId] || editServiceImages[serviceId] ) }
+              onPress={() => {
+                setEditPrices((prevEditPrices) => ({ ...prevEditPrices, [serviceId]: null }))
+                setEditNames((prevEditNames) => ({ ...prevEditNames, [serviceId]: null }))
+                setEditServiceImages((prevEditImages) => ({ ...prevEditImages, [serviceId]: null }))
+              }}
+            >
+              <Ionicons name="close-sharp" size={20} color={(editNames[serviceId] || editPrices[serviceId] || editServiceImages[serviceId] )? 'red': 'lightgray'}  />
+            </TouchableOpacity>
+
             <TouchableOpacity style={[{padding: (editServiceImages[serviceId] ||services[serviceId].imageUrl ) ? 0 : 10 }, styles.miniImagePickerButton]} onPress={() => pickImage(serviceId)}>
                 {editServiceImages[serviceId] ||services[serviceId].imageUrl ? (editServiceImages[serviceId] ?  <Image source={{ uri: editServiceImages[serviceId] }} style={styles.miniServiceImage} />:services[serviceId].imageUrl && <Image source={{ uri: services[serviceId].imageUrl }} style={styles.miniServiceImage} />) : <Ionicons name="image" size={20} color="white" />}
               
@@ -272,7 +287,7 @@ const styles = StyleSheet.create({
   saveButton: {
     justifyContent: 'center',
     alignItems: 'center',
-    padding:10,
+    padding:0,
   },
   imagePickerButton: {
     flexDirection: 'row',
