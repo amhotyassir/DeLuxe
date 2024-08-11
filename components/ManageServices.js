@@ -7,10 +7,8 @@ import { useAppContext } from '../context/AppContext';
 
 const { width } = Dimensions.get('window');
 
-const currency = 'MAD';
-
 const ManageServices = () => {
-  const { services, addService, updateService, removeService } = useAppContext();
+  const { services, addService, updateService, removeService , currency} = useAppContext();
   const [serviceName, setServiceName] = useState('');
   const [servicePrice, setServicePrice] = useState('');
   const [pricingType, setPricingType] = useState('perPiece');

@@ -6,6 +6,7 @@ import { ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from 'fi
 // Create the context
 const AppContext = createContext();
 
+const currency = 'MAD';
 // Create a provider component
 export const AppProvider = ({ children }) => {
   const [orders, setOrders] = useState([]);
@@ -101,6 +102,7 @@ export const AppProvider = ({ children }) => {
     set(dbRef(database, `services/${newServiceKey}`), newService);
   };
 
+
   const updateService = async (serviceId, serviceData) => {
     if (serviceData.imageUri) {
       // console.log('here in updated service', serviceData)
@@ -120,6 +122,14 @@ export const AppProvider = ({ children }) => {
     }
     
   };
+  
+  const addOrder = async (newOrder) => {
+
+    const newOrderKey = `orders_${Date.now()}`;
+
+    set(dbRef(database, `orders/${newOrderKey}`), newOrder);
+
+  };
 
   const removeService = (serviceId) => {
     
@@ -135,7 +145,7 @@ export const AppProvider = ({ children }) => {
   };
 
   return (
-    <AppContext.Provider value={{ orders, deliveredOrders, deletedOrders, updateOrderStatus, loading, services, addService, updateService, removeService }}>
+    <AppContext.Provider value={{ orders, addOrder, deliveredOrders, deletedOrders, updateOrderStatus, loading, services, addService, updateService, removeService, currency }}>
       {children}
     </AppContext.Provider>
   );
