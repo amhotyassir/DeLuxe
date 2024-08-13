@@ -122,7 +122,6 @@ const OrderEntryScreen = ({ navigation }) => {
   }
 
     useEffect(() => {
-      console.log('here')
       setTotal(calculateTotal());
     }, [serviceDetails]);
 
