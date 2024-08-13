@@ -33,17 +33,31 @@ const ManageServices = () => {
     setServicePrice('');
     setPricingType('perPiece');
     setServiceImage(null);
+
   };
 
   const handleUpdateService = async (serviceId, serviceData) => {
+    // console.log ('in handle update', serviceData)
     if (serviceData.price && !isDecimal(serviceData.price)) {
       Alert.alert('Error', 'Price must be a decimal value');
       setEditPrices((prevEditPrices) => ({ ...prevEditPrices, [serviceId]: services[serviceId].price }));
       setEditNames((prevEditNames) => ({ ...prevEditNames, [serviceId]: services[serviceId].name }));
       return;
     }
-    await updateService(serviceId, serviceData);
+    if (!serviceData.name) {
+      Alert.alert('Error', 'Service name cannot be empty');
+      setEditNames((prevEditNames) => ({ ...prevEditNames, [serviceId]: services[serviceId].name }));
+      return;
+    }
+    if (!serviceData.price) {
+        Alert.alert('Error', 'Service price cannot be empty');
+        setEditNames((prevEditNames) => ({ ...prevEditNames, [serviceId]: services[serviceId].price }));
+        return;
+      }
+    await updateService(serviceId, serviceData, editServiceImages[serviceId]);
     setEditServiceImages((prevEditServiceImages) => ({ ...prevEditServiceImages, [serviceId]: null }));
+    setEditNames((prevEditNames) => ({ ...prevEditNames, [serviceId]: undefined }));
+    setEditPrices((prevEditPrices) => ({ ...prevEditPrices, [serviceId]: undefined }));
     Alert.alert('Success', 'Service updated successfully');
   };
 
@@ -144,31 +158,31 @@ const ManageServices = () => {
           <View style={styles.serviceRow}>
             <TextInput
               style={styles.serviceName}
-              value={editNames[serviceId] || services[serviceId].name}
+              value={editNames[serviceId] !== undefined ? editNames[serviceId] : services[serviceId].name}
               onChangeText={(name) => setEditNames((prevEditNames) => ({ ...prevEditNames, [serviceId]: name }))}
             />
             <TextInput
               style={styles.servicePrice}
-              value={editPrices[serviceId] || String(services[serviceId].price)}
+              value={editPrices[serviceId] !== undefined ? editPrices[serviceId] : String(services[serviceId].price)}
               onChangeText={(price) => setEditPrices((prevEditPrices) => ({ ...prevEditPrices, [serviceId]: price }))}
               keyboardType="number-pad"
               maxLength={6}
             />
             <TouchableOpacity
               style={styles.saveButton}
-              disabled={!(editNames[serviceId] || editPrices[serviceId] || editServiceImages[serviceId] ) }
-              onPress={() => handleUpdateService(serviceId, { ...services[serviceId], price: editPrices[serviceId], imageUri: editServiceImages[serviceId]})}
+              disabled={!(editNames[serviceId] || editPrices[serviceId] || editServiceImages[serviceId] )}
+              onPress={() => handleUpdateService(serviceId, { ...services[serviceId], name: editNames[serviceId] || services[serviceId].name, price: editPrices[serviceId] || services[serviceId].price, imageUri: editServiceImages[serviceId] || services[serviceId].imageUrl })}
             >
               <Ionicons name="checkmark-circle" size={20} color={(editNames[serviceId] || editPrices[serviceId] || editServiceImages[serviceId] )? 'green': 'lightgray'}  />
             </TouchableOpacity>
 
             <TouchableOpacity
               style={styles.saveButton}
-              disabled={!(editNames[serviceId] || editPrices[serviceId] || editServiceImages[serviceId] ) }
+              disabled={!(editNames[serviceId] || editPrices[serviceId] || editServiceImages[serviceId] )}
               onPress={() => {
-                setEditPrices((prevEditPrices) => ({ ...prevEditPrices, [serviceId]: null }))
-                setEditNames((prevEditNames) => ({ ...prevEditNames, [serviceId]: null }))
-                setEditServiceImages((prevEditImages) => ({ ...prevEditImages, [serviceId]: null }))
+                setEditPrices((prevEditPrices) => ({ ...prevEditPrices, [serviceId]: undefined }));
+                setEditNames((prevEditNames) => ({ ...prevEditNames, [serviceId]: undefined }));
+                setEditServiceImages((prevEditImages) => ({ ...prevEditImages, [serviceId]: undefined }));
               }}
             >
               <Ionicons name="close-sharp" size={20} color={(editNames[serviceId] || editPrices[serviceId] || editServiceImages[serviceId] )? 'red': 'lightgray'}  />

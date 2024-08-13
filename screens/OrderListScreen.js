@@ -1,12 +1,12 @@
 import React, { useState, useLayoutEffect } from 'react';
-import { View, Text, FlatList, ActivityIndicator, StyleSheet, TouchableOpacity, Modal, Alert, Dimensions, Linking } from 'react-native';
+import { View, Text, FlatList, ActivityIndicator, StyleSheet, Modal, Alert, Dimensions , TouchableOpacity} from 'react-native';
 import RNPickerSelect from 'react-native-picker-select';
 import { Ionicons } from '@expo/vector-icons';
 import { WebView } from 'react-native-webview';
 import { useAppContext } from '../context/AppContext';
+import OrderListComponent from '../components/OrderListComponent';
 
 const { width, height } = Dimensions.get('window');
-const itemWidth = width * 0.9;
 
 const OrderListScreen = ({ navigation }) => {
   const { orders, updateOrderStatus, addDeleted, loading } = useAppContext();
@@ -171,64 +171,19 @@ const OrderListScreen = ({ navigation }) => {
         data={filteredOrders}
         keyExtractor={(item, index) => item.id}
         renderItem={({ item, index }) => (
-          <View style={[
-            styles.customerItem,
-            { borderLeftColor: getStatusColor(item.status), backgroundColor: expandedOrders[item.id] ? '#f2f2f2' : '#fff' }
-          ]}>
-            <View style={styles.header}>
-              <Text style={styles.customerName}>{index + 1}. {item.name.length > 10 ? `${item.name.substring(0, 8)}...` : item.name}</Text>
-              <View style={styles.headerRight}>
-                <Text style={[styles.status, { backgroundColor: getStatusColor(item.status) }]}>{item.status}</Text>
-                <TouchableOpacity onPress={() => toggleExpandOrder(item.id, index)}>
-                  <Ionicons name={expandedOrders[item.id] ? "chevron-up" : "chevron-down"} size={24} color="blue" />
-                </TouchableOpacity>
-              </View>
-            </View>
-            {expandedOrders[item.id] && (
-              <View style={styles.details}>
-                <View style={styles.row}>
-                  <Text style={styles.label}>Full Name:</Text>
-                  <Text style={styles.value}>{item.name}</Text>
-                </View>
-                <View style={styles.row}>
-                  <Text style={styles.label}>Phone:</Text>
-                  <Text onPress={() => Linking.openURL(`tel:${item.phone}`)} style={[styles.value, styles.link]}>{item.phone}</Text>
-                </View>
-                <View style={styles.row}>
-                  <Text style={styles.label}>Location:</Text>
-                  <Text onPress={() => handleOpenLocation(item.location)} style={[styles.value, styles.link]}>View</Text>
-                </View>
-                <View style={styles.row}>
-                  <Text style={styles.label}>Services:</Text>
-                  <Text style={styles.value}>{Object.keys(item.services).join(', ')}</Text>
-                </View>
-                <View style={styles.row}>
-                  <Text style={styles.label}>Order Date:</Text>
-                  <Text style={styles.value}>{formatDateTime(item.orderDate)}</Text>
-                </View>
-                <View style={styles.row}>
-                  <Text style={styles.label}>Status:</Text>
-                  <Text style={styles.value}>{item.status}</Text>
-                </View>
-                <View style={styles.actions}>
-                  <TouchableOpacity
-                    style={[styles.button, { backgroundColor: '#FF0000', marginLeft: 8 }]}
-                    onPress={() => handleDeleteOrder(item)}
-                  >
-                    <Ionicons name="trash" size={20} color="white" />
-                    <Text style={styles.buttonText}>Delete</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.button, { backgroundColor: getNextStatusColor(item.status) }]}
-                    onPress={() => handleStatusChange(item.id, item.status)}
-                  >
-                    <Ionicons name="checkmark-circle" size={20} color="white" />
-                    <Text style={styles.buttonText}>{item.status === 'Ready' ? 'Delivered' : getNextStatus(item.status)}</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            )}
-          </View>
+          <OrderListComponent
+            item={item}
+            index={index}
+            expandedOrders={expandedOrders}
+            toggleExpandOrder={toggleExpandOrder}
+            handleStatusChange={handleStatusChange}
+            handleDeleteOrder={handleDeleteOrder}
+            handleOpenLocation={handleOpenLocation}
+            formatDateTime={formatDateTime}
+            getStatusColor={getStatusColor}
+            getNextStatusColor={getNextStatusColor}
+            getNextStatus={getNextStatus}
+          />
         )}
       />
 
@@ -273,76 +228,6 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: 'gray',
-  },
-  customerItem: {
-    marginBottom: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    borderLeftWidth: 5,
-    width: itemWidth,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  customerName: {
-    fontWeight: 'bold',
-    fontSize: 18,
-  },
-  status: {
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderRadius: 4,
-    color: 'white',
-    fontWeight: 'bold',
-    marginRight: 8,
-  },
-  details: {
-    marginTop: 8,
-    backgroundColor: '#f2f2f2',
-    padding: 10,
-    borderRadius: 8,
-  },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 4,
-  },
-  label: {
-    fontWeight: 'bold',
-    width: '40%',
-    textAlign: 'left',
-  },
-  value: {
-    width: '60%',
-    textAlign: 'left',
-  },
-  link: {
-    color: 'blue',
-    textDecorationLine: 'underline',
-  },
-  actions: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginTop: 8,
-  },
-  button: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 8,
-    padding: 8,
-  },
-  buttonText: {
-    color: 'white',
-    marginLeft: 8,
   },
   modalContainer: {
     flex: 1,

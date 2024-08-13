@@ -61,7 +61,7 @@ const OrderEntryScreen = ({ navigation }) => {
       Alert.alert('Error', 'Phone number must be exactly 10 digits');
       return;
     }
-
+    console.log(total)
     if (!total){
       Alert.alert('Error', 'Check Services Quantities')
       return
@@ -123,7 +123,7 @@ const OrderEntryScreen = ({ navigation }) => {
 
     useEffect(() => {
       setTotal(calculateTotal());
-    }, [serviceDetails]);
+    }, [serviceDetails, selectedServices]);
 
     const handleServiceChange = (serviceId, value) => {
       setServiceDetails((prevDetails) => ({
@@ -179,12 +179,12 @@ const OrderEntryScreen = ({ navigation }) => {
         />
 
         <Text style={styles.label}>Customer Location</Text>
-        <TextInput
+        {/* <TextInput
           style={styles.input}
           value={customerLocation}
           placeholder="Current location will be set"
           editable={false}
-        />
+        /> */}
         <TouchableOpacity
           style={styles.locationButton}
           onPress={getCurrentLocation}
@@ -259,7 +259,7 @@ const OrderEntryScreen = ({ navigation }) => {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: '#2196F3',
+      backgroundColor: '#32cd32',
       borderRadius: 8,
       padding: 8,
       marginRight: 10,
@@ -328,7 +328,8 @@ const OrderEntryScreen = ({ navigation }) => {
       borderRadius: 8,
       padding: 16,
       marginTop: 16,
-    }, totalLabel: {
+    }, 
+    totalLabel: {
       fontSize: 18,
       fontWeight: 'bold',
       textAlign: 'center',

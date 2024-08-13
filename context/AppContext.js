@@ -103,8 +103,9 @@ export const AppProvider = ({ children }) => {
   };
 
 
-  const updateService = async (serviceId, serviceData) => {
-    if (serviceData.imageUri) {
+  const updateService = async (serviceId, serviceData, hasImageChanged) => {
+    // console.log(serviceData)
+    if (hasImageChanged) {
       // console.log('here in updated service', serviceData)
 
       const imageRef = storageRef(storage, `services/${serviceId}`);
@@ -113,13 +114,11 @@ export const AppProvider = ({ children }) => {
       await uploadBytes(imageRef, blob);
       serviceData.imageUrl = await getDownloadURL(imageRef);
 
-      delete serviceData.imageUri;
-      set(dbRef(database, `services/${serviceId}/imageUrl`), serviceData.imageUrl)
+      // set(dbRef(database, `services/${serviceId}`), serviceData);
     }
-
-    else{
-      update(dbRef(database, `services/${serviceId}`), serviceData);
-    }
+    delete serviceData.imageUri;
+    set(dbRef(database, `services/${serviceId}`), serviceData);
+    
     
   };
   
