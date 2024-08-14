@@ -1,5 +1,5 @@
 import React, { useState, useLayoutEffect, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Modal, Dimensions, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Modal, Dimensions, ScrollView, ActivityIndicator } from 'react-native';
 import RNPickerSelect from 'react-native-picker-select';
 import { Ionicons } from '@expo/vector-icons';
 import { WebView } from 'react-native-webview';
@@ -15,7 +15,6 @@ const OrderEntryScreen = ({ navigation }) => {
   const [customerPhone, setCustomerPhone] = useState('');
   const [customerLocation, setCustomerLocation] = useState('');
   const [selectedServices, setSelectedServices] = useState([]);
-  const [serviceDetails, setServiceDetails] = useState({});
   const [modalVisible, setModalVisible] = useState(false);
   const [total, setTotal] = useState(0)
 
@@ -28,7 +27,7 @@ const OrderEntryScreen = ({ navigation }) => {
         </TouchableOpacity>
       ),
     });
-  }, [navigation, handleAddOrder, customerLocation, customerName, customerPhone, serviceDetails, selectedServices]);
+  }, [navigation, handleAddOrder, customerLocation, customerName, customerPhone, selectedServices]);
 
   const getCurrentLocation = async () => {
     let { status } = await Location.requestForegroundPermissionsAsync();
@@ -36,18 +35,17 @@ const OrderEntryScreen = ({ navigation }) => {
       Alert.alert('Permission to access location was denied');
       return;
     }
-
+    setModalVisible(true);
     let location = await Location.getCurrentPositionAsync({});
     const locationUrl = `https://www.google.com/maps?q=${location.coords.latitude},${location.coords.longitude}`;
     setCustomerLocation(locationUrl);
-    setModalVisible(true);
+    
   };
 
   const resetForm = () => {
     setCustomerName('');
     setCustomerPhone('');
     setSelectedServices([]);
-    setServiceDetails({});
     setCustomerLocation('');
   };
 
@@ -61,7 +59,6 @@ const OrderEntryScreen = ({ navigation }) => {
       Alert.alert('Error', 'Phone number must be exactly 10 digits');
       return;
     }
-    console.log(total)
     if (!total){
       Alert.alert('Error', 'Check Services Quantities')
       return
@@ -72,7 +69,7 @@ const OrderEntryScreen = ({ navigation }) => {
       name: customerName,
       phone: customerPhone,
       location: customerLocation,
-      services: serviceDetails,
+      services: selectedServices,
       status: 'New',
       orderDate: new Date().toISOString(),
     };
@@ -94,8 +91,9 @@ const OrderEntryScreen = ({ navigation }) => {
   const calculateTotal = () => {
     let globalTotal = 0
 
-    Object.keys(serviceDetails).map((key) => {
-      const serviceDetail = serviceDetails[key]
+    Object.keys(selectedServices).map((index) => {
+      const serviceDetail = selectedServices[index]
+      const key = serviceDetail.id
 
       let total = 0;
 
@@ -108,8 +106,9 @@ const OrderEntryScreen = ({ navigation }) => {
           total = NaN;
         }
       } else {
-        if (isDecimal(serviceDetail)) {
-          total = serviceDetail * services[key].price;
+        
+        if (isDecimal(serviceDetail.quantity)) {
+          total = serviceDetail.quantity * services[key].price;
         } else {
           total = NaN;
         }
@@ -123,39 +122,44 @@ const OrderEntryScreen = ({ navigation }) => {
 
     useEffect(() => {
       setTotal(calculateTotal());
-    }, [serviceDetails, selectedServices]);
+    }, [ selectedServices]);
 
-    const handleServiceChange = (serviceId, value) => {
-      setServiceDetails((prevDetails) => ({
-        ...prevDetails,
-        [serviceId]: value,
-      }));
+    const handleServiceChange = (index, value) => {
+      
+
+      const changed = selectedServices.map((selectedService, ind)=>{
+        if (ind==index){
+          return value
+        }
+        return selectedService
+      })
+
+      setSelectedServices(changed)
+      
     };
 
-    const handleServiceDelete = (serviceId) => {
-      setSelectedServices((prevServices) => prevServices.filter((id) => id !== serviceId));
-      setServiceDetails((prevDetails) => {
-        const { [serviceId]: _, ...rest } = prevDetails;
-        return rest;
-      });
+    const handleServiceDelete = (index) => {
+      const deletedServices = selectedServices.filter((service, ind) => ind!==index);
+      setSelectedServices(deletedServices)
     };
+
 
     const handleServiceSelect = (serviceId) => {
       if (serviceId) {
-        setSelectedServices((prevServices) => [...prevServices, serviceId]);
         const selectedService = services[serviceId];
         if (selectedService.type === 'perSquareMeter') {
-          setServiceDetails((prevDetails) => ({
+          setSelectedServices((prevDetails) => ([
             ...prevDetails,
-            [serviceId]: { length: 1, width: 1 },
-          }));
+            {id: serviceId, length: 1, width: 1 },
+          ]));
         } else {
-          setServiceDetails((prevDetails) => ({
+          setSelectedServices((prevDetails) => ([
             ...prevDetails,
-            [serviceId]: 1,
-          }));
+            {id:serviceId, quantity: 1},
+          ]));
         }
       }
+      
     };
 
     return (
@@ -208,13 +212,13 @@ const OrderEntryScreen = ({ navigation }) => {
           }}
         />
 
-        {selectedServices.map((serviceId, index) => (
+        {selectedServices.map((item, index) => (
           <ServiceInput
-            key={serviceId}
-            service={{ id: serviceId, ...services[serviceId] }}
-            serviceDetail={serviceDetails[serviceId]}
-            onServiceDetailChange={handleServiceChange}
-            onDelete={handleServiceDelete}
+            key={index + '/' + item.id}
+            service={services[item.id] }
+            serviceDetail={selectedServices[index]}
+            onServiceDetailChange={(object)=> handleServiceChange(index, object)}
+            onDelete={()=>handleServiceDelete(index)}
           />
         ))}
 
@@ -229,7 +233,7 @@ const OrderEntryScreen = ({ navigation }) => {
             setModalVisible(!modalVisible);
           }}
         >
-          <View style={styles.modalContainer}>
+          {customerLocation?<View style={styles.modalContainer}>
             <View style={styles.modalView}>
               <WebView
                 source={{ uri: customerLocation }}
@@ -243,7 +247,7 @@ const OrderEntryScreen = ({ navigation }) => {
                 <Text style={styles.buttonText}>Close</Text>
               </TouchableOpacity>
             </View>
-          </View>
+          </View>:<ActivityIndicator/>}
         </Modal>
       </ScrollView>
     );
@@ -334,6 +338,7 @@ const OrderEntryScreen = ({ navigation }) => {
       fontWeight: 'bold',
       textAlign: 'center',
       marginTop: 16,
+      marginBottom:30,
     },
   });
 

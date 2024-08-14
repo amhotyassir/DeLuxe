@@ -6,8 +6,9 @@ import { useAppContext } from '../context/AppContext';
 const { width } = Dimensions.get('window');
 
 const ServiceInput = ({ service, serviceDetail, onServiceDetailChange, onDelete }) => {
-  const { id, name, price, type } = service;
+  const {  name, price, type } = service;
   const { currency } = useAppContext();
+
 
   const isDecimal = (value) => /^\d+(\.\d{1,2})?$/.test(value);
 
@@ -21,16 +22,19 @@ const ServiceInput = ({ service, serviceDetail, onServiceDetailChange, onDelete 
       total = NaN;
     }
   } else {
-    if (isDecimal(serviceDetail)) {
-      total = serviceDetail * price;
+    if (isDecimal(serviceDetail.quantity)) {
+      total = serviceDetail.quantity * price;
     } else {
       total = NaN;
     }
   }
 
   const handleDetailChange = (key, value) => {
-    onServiceDetailChange(id, { ...serviceDetail, [key]: value });
+    
+    onServiceDetailChange({ ...serviceDetail, [key]: Number(value) });
   };
+
+  
   
 
   return (
@@ -56,8 +60,8 @@ const ServiceInput = ({ service, serviceDetail, onServiceDetailChange, onDelete 
       ) : (
         <TextInput
           style={styles.input}
-          value={String(serviceDetail)}
-          onChangeText={(value) => onServiceDetailChange(id, value)}
+          value={String(serviceDetail?.quantity)}
+          onChangeText={(value) => handleDetailChange('quantity', value)}
           placeholder="Quantity"
           keyboardType="number-pad"
         />
@@ -65,7 +69,7 @@ const ServiceInput = ({ service, serviceDetail, onServiceDetailChange, onDelete 
       <Text style={styles.total}>
         {isNaN(total) ? 'Invalid' : `${total.toFixed(0)} ${currency}`}
       </Text>
-      <TouchableOpacity style={styles.deleteButton} onPress={() => onDelete(id)}>
+      <TouchableOpacity style={styles.deleteButton} onPress={() => onDelete()}>
         <Ionicons name="trash" size={20} color="red" />
       </TouchableOpacity>
     </View>

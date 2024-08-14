@@ -21,21 +21,24 @@ const OrderListComponent = ({
 }) => {
   const { services,currency } = useAppContext();
   const renderServicesTable = (order_services) => {
+    // console.log('order_services = ',order_services)
     let grandTotal=0
-    const detailedServices =  Object.keys(order_services).map((key) => {
+    const detailedServices =  order_services.map((order_service, index) => {
 
-      // console.log(order_services)
+      // console.log(order_service)
+      const key = order_service.id
       const service = services[key];
+      // console.log(service)
       const total = service.type === 'perSquareMeter' 
-        ? Number(order_services[key].length)* Number(order_services[key].width) * Number(service.price)
-        : Number(order_services[key].quantity) * Number(service.price);
+        ? Number(order_service.length)* Number(order_service.width) * Number(service.price)
+        : Number(order_service.quantity) * Number(service.price);
       grandTotal = grandTotal + total
       return (
-        <View key={key} style={styles.serviceRow}>
+        <View key={index + '/' + key} style={styles.serviceRow}>
           <Text style={styles.serviceCell}>{service.name}</Text>
           <Text style={styles.serviceCell}>{service.type === 'perSquareMeter' 
-        ?  order_services[key].length  + ' x ' +  order_services[key].width + ' m²'
-        :  order_services[key] + ' Pcs'}</Text>
+        ?  order_service.length  + ' x ' +  order_service.width + ' m²'
+        :  order_service.quantity+ ' Pcs'}</Text>
           <Text style={styles.serviceCell}>{total.toFixed(0)} {currency}</Text>
         </View>
       );
@@ -213,6 +216,7 @@ const styles = StyleSheet.create({
   serviceCell: {
     width: '33%',
     textAlign: 'center',
+    textAlignVertical:'center',
   },
   serviceHeader: {
     fontWeight: 'bold',
