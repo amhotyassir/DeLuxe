@@ -1,14 +1,29 @@
 import React from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Dimensions,Image } from 'react-native';
 import { Ionicons } from 'react-native-vector-icons';
 import { useAppContext } from '../context/AppContext';
+import * as ImagePicker from 'expo-image-picker';
 
 const { width } = Dimensions.get('window');
 
-const ServiceInput = ({ service, serviceDetail, onServiceDetailChange, onDelete }) => {
+const ServiceInput = ({ index,service, serviceDetail, onServiceDetailChange, onDelete }) => {
   const {  name, price, type } = service;
   const { currency } = useAppContext();
 
+  const pickImage = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1], // Square aspect ratio
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      const imageUri = result.assets[0].uri;
+      onServiceDetailChange({...serviceDetail, imageUri:imageUri})
+
+    }
+  };
 
   const isDecimal = (value) => /^\d+(\.\d{1,2})?$/.test(value);
 
@@ -69,6 +84,10 @@ const ServiceInput = ({ service, serviceDetail, onServiceDetailChange, onDelete 
       <Text style={styles.total}>
         {isNaN(total) ? 'Invalid' : `${total.toFixed(0)} ${currency}`}
       </Text>
+      <TouchableOpacity style={[{padding: (serviceDetail.imageUri ) ? 0 : 10 }, styles.miniImagePickerButton]} onPress={() => pickImage()}>
+        {serviceDetail.imageUri ? <Image source={{ uri: serviceDetail.imageUri }} style={styles.miniServiceImage} /> : <Ionicons name="image" size={20} color="white" />}
+            
+      </TouchableOpacity>
       <TouchableOpacity style={styles.deleteButton} onPress={() => onDelete()}>
         <Ionicons name="trash" size={20} color="red" />
       </TouchableOpacity>
@@ -102,6 +121,17 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     justifyContent: 'center',
     alignItems: 'center',
+  },miniServiceImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 8,
+    alignSelf: 'center',
+  },
+  miniImagePickerButton:{
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#2196F3',
+    borderRadius: 8,
   },
 });
 

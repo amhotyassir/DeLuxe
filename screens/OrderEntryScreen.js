@@ -215,6 +215,7 @@ const OrderEntryScreen = ({ navigation }) => {
         {selectedServices.map((item, index) => (
           <ServiceInput
             key={index + '/' + item.id}
+            index={index}
             service={services[item.id] }
             serviceDetail={selectedServices[index]}
             onServiceDetailChange={(object)=> handleServiceChange(index, object)}

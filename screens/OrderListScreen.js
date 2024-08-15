@@ -9,7 +9,7 @@ import OrderListComponent from '../components/OrderListComponent';
 const { width, height } = Dimensions.get('window');
 
 const OrderListScreen = ({ navigation }) => {
-  const { orders, updateOrderStatus, addDeleted, loading } = useAppContext();
+  const { orders, updateOrderStatus, loading } = useAppContext();
   const [selectedStatus, setSelectedStatus] = useState('All');
   const [expandedOrders, setExpandedOrders] = useState({});
   const [modalVisible, setModalVisible] = useState(false);
@@ -129,7 +129,7 @@ const OrderListScreen = ({ navigation }) => {
     );
   };
 
-  const handleDeleteOrder = (order) => {
+  const handleDeleteOrder = (order_id) => {
     Alert.alert(
       "Confirm Delete",
       "Are you sure you want to delete this order?",
@@ -141,14 +141,10 @@ const OrderListScreen = ({ navigation }) => {
         {
           text: "OK",
           onPress: () => {
-            addDeleted(order)
-              .then(() => {
-                Alert.alert('Success', 'Order deleted successfully');
-              })
-              .catch((error) => {
-                Alert.alert('Error', 'Failed to delete order');
-                console.error(error);
-              });
+            
+            updateOrderStatus(order_id,'Deleted')
+            Alert.alert('Success', 'Order deleted successfully');
+
           }
         }
       ],

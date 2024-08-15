@@ -77,7 +77,12 @@ export const AppProvider = ({ children }) => {
       if (order) {
         set(dbRef(database, `deleted/${orderId}`), { ...order, status });
         setOrders(orders.filter(o => o.id !== orderId));
+        // console.log(storageRef(storage,`orders/${orderId}`))
+        // deleteObject(storageRef(storage,`orders/${orderId}/`)).catch((error) => {
+        //   console.error('Failed to delete image:', error);
+        // });
         set(dbRef(database, `orders/${orderId}`), null); // Remove from orders
+        
       }
     } else {
       update(dbRef(database, `orders/${orderId}`), { status });
@@ -125,6 +130,27 @@ export const AppProvider = ({ children }) => {
   const addOrder = async (newOrder) => {
 
     const newOrderKey = `orders_${Date.now()}`;
+    // console.log(newOrder.services)
+    newOrder.services.map(async(service,index)=>{
+
+      const imageUri = service.imageUri
+
+      const imageRef = storageRef(storage, `orders/${newOrderKey}/${index}`);
+      // const imageUri = newOrder.se
+      const response = await fetch(imageUri);
+      const blob = await response.blob();
+      await uploadBytes(imageRef, blob);
+      const imageUrl = await getDownloadURL(imageRef);
+      delete service.imageUri
+
+      service.imageUrl = imageUrl
+      // console.log('This service = ', service)
+
+      set(dbRef(database, `orders/${newOrderKey}/services/${index}`), service);
+
+      return service
+      
+    })
 
     set(dbRef(database, `orders/${newOrderKey}`), newOrder);
 

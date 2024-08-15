@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Dimensions, ScrollView, Alert, Image } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Dimensions, ScrollView, Alert, Image, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import RNPickerSelect from 'react-native-picker-select';
 import * as ImagePicker from 'expo-image-picker';
@@ -16,7 +16,9 @@ const ManageServices = () => {
   const [editPrices, setEditPrices] = useState({});
   const [editNames, setEditNames] = useState({});
   const [editServiceImages, setEditServiceImages] = useState({});
-
+    if(!services){
+        return <ActivityIndicator />
+    }
   const isDecimal = (value) => /^\d+(\.\d{1,2})?$/.test(value);
 
   const handleAddService = async () => {

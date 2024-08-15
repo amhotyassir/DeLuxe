@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Dimensions, Linking } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Dimensions, Linking, Modal, Image, ActivityIndicator } from 'react-native';
 import { Ionicons } from 'react-native-vector-icons';
 import { useAppContext } from '../context/AppContext';
 
@@ -20,15 +20,19 @@ const OrderListComponent = ({
   getNextStatus,
 }) => {
   const { services,currency } = useAppContext();
+  const [showModal, setShowModal ]= useState(false)
+  const [modalImage, setModalImage] = useState('')
+  if (!services){
+    return <ActivityIndicator />
+  }
   const renderServicesTable = (order_services) => {
-    // console.log('order_services = ',order_services)
+
     let grandTotal=0
     const detailedServices =  order_services.map((order_service, index) => {
 
-      // console.log(order_service)
       const key = order_service.id
       const service = services[key];
-      // console.log(service)
+
       const total = service.type === 'perSquareMeter' 
         ? Number(order_service.length)* Number(order_service.width) * Number(service.price)
         : Number(order_service.quantity) * Number(service.price);
@@ -36,10 +40,16 @@ const OrderListComponent = ({
       return (
         <View key={index + '/' + key} style={styles.serviceRow}>
           <Text style={styles.serviceCell}>{service.name}</Text>
-          <Text style={styles.serviceCell}>{service.type === 'perSquareMeter' 
+          <Text onPress={()=>{
+            if (order_service.imageUrl){
+              setShowModal(true)
+              setModalImage(order_service.imageUrl)
+            }
+          }} style={[styles.serviceCell, order_service.imageUrl?styles.link:{}]}>{service.type === 'perSquareMeter' 
         ?  order_service.length  + ' x ' +  order_service.width + ' m²'
         :  order_service.quantity+ ' Pcs'}</Text>
           <Text style={styles.serviceCell}>{total.toFixed(0)} {currency}</Text>
+          
         </View>
       );
       
@@ -113,7 +123,7 @@ const OrderListComponent = ({
           <View style={styles.actions}>
             <TouchableOpacity
               style={[styles.button, { backgroundColor: '#FF0000', marginLeft: 8 }]}
-              onPress={() => handleDeleteOrder(item)}
+              onPress={() => handleDeleteOrder(item.id)}
             >
               <Ionicons name="trash" size={20} color="white" />
               <Text style={styles.buttonText}>Delete</Text>
@@ -130,6 +140,27 @@ const OrderListComponent = ({
           </View>
         </View>
       )}
+      <Modal
+            animationType="slide"
+            transparent={true}
+            visible={showModal}
+            onRequestClose={() => setShowModal(false)}
+          >
+            <View style = {styles.modalContainer}>
+              <View style={styles.modalView}>
+                <Image source ={{uri:modalImage}} style={styles.serviceImage}/>
+                <TouchableOpacity
+                  style={styles.closeButton}
+                  onPress={() => setShowModal(!showModal)}
+                >
+                  <Ionicons name="close-circle" size={24} color="white" />
+                  <Text style={styles.buttonText}>Close</Text>
+                </TouchableOpacity>
+              </View>
+                
+            </View>
+
+          </Modal>
     </View>
   );
 };
@@ -228,6 +259,46 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     marginTop: 16,
+  },
+  serviceImage:{
+    width : width *0.8,
+    height : width *0.8,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalView: {
+    width: width * 0.8,
+    height: width * 0.8 + 100,
+    backgroundColor: 'white',
+    borderRadius: 20,
+    padding: 16,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  closeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#2196F3',
+    borderRadius: 8,
+    padding: 16,
+    marginTop: 16,
+  }, 
+  buttonText: {
+    color: 'white',
+    marginLeft: 8,
+    fontSize: 16,
   },
 });
 
