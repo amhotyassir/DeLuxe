@@ -13,7 +13,6 @@ const OrderListComponent = ({
   toggleExpandOrder,
   handleStatusChange,
   handleDeleteOrder,
-  handleOpenLocation,
   formatDateTime,
   getStatusColor,
   getNextStatusColor,
@@ -99,9 +98,7 @@ const OrderListComponent = ({
           </View>
           <View style={styles.row}>
             <Text style={styles.label}>Location:</Text>
-            <Text onPress={() => handleOpenLocation(item.location)} style={[styles.value, styles.link]}>
-              View
-            </Text>
+            <Text style={styles.value}>{item.location}</Text>
           </View>
           
           <View style={styles.row}>

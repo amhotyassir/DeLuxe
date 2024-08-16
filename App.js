@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { AppProvider } from './context/AppContext';
 import OrderEntryScreen from './screens/OrderEntryScreen';
 import OrderListScreen from './screens/OrderListScreen';
-import ServiceManagementScreen from './screens/ServiceManagementScreen';
+// import ServiceManagementScreen from './screens/ServiceManagementScreen';
 import SettingsScreen from './screens/SettingsScreen';
 
 
@@ -31,8 +31,8 @@ const App = () => {
                 iconName = 'add-circle';
               } else if (route.name === 'OrderList') {
                 iconName = 'list';
-              } else if (route.name === 'ServiceManagement') {
-                iconName = 'settings';
+              // } else if (route.name === 'ServiceManagement') {
+              //   iconName = 'settings';
               } else if (route.name === 'Settings') {
                 iconName = 'options';
               }
@@ -43,7 +43,7 @@ const App = () => {
         >
           <Tab.Screen name="OrderEntry" component={OrderEntryScreen} options={{ title: 'Order Entry' }} />
           <Tab.Screen name="OrderList" component={OrderListScreen} options={{ title: 'Order List' }} />
-          <Tab.Screen name="ServiceManagement" component={ServiceManagementScreen} options={{ title: 'Service Management' }} />
+          {/* <Tab.Screen name="ServiceManagement" component={ServiceManagementScreen} options={{ title: 'Service Management' }} /> */}
           <Tab.Screen name="Settings" component={SettingsScreen} options={{ title: 'Settings' }} />
         </Tab.Navigator>
       </NavigationContainer>

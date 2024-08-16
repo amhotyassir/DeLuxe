@@ -29,18 +29,18 @@ const OrderEntryScreen = ({ navigation }) => {
     });
   }, [navigation, handleAddOrder, customerLocation, customerName, customerPhone, selectedServices]);
 
-  const getCurrentLocation = async () => {
-    let { status } = await Location.requestForegroundPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Permission to access location was denied');
-      return;
-    }
-    setModalVisible(true);
-    let location = await Location.getCurrentPositionAsync({});
-    const locationUrl = `https://www.google.com/maps?q=${location.coords.latitude},${location.coords.longitude}`;
-    setCustomerLocation(locationUrl);
+  // const getCurrentLocation = async () => {
+  //   let { status } = await Location.requestForegroundPermissionsAsync();
+  //   if (status !== 'granted') {
+  //     Alert.alert('Permission to access location was denied');
+  //     return;
+  //   }
+  //   setModalVisible(true);
+  //   let location = await Location.getCurrentPositionAsync({});
+  //   const locationUrl = `https://www.google.com/maps?q=${location.coords.latitude},${location.coords.longitude}`;
+  //   setCustomerLocation(locationUrl);
     
-  };
+  // };
 
   const resetForm = () => {
     setCustomerName('');
@@ -183,19 +183,19 @@ const OrderEntryScreen = ({ navigation }) => {
         />
 
         <Text style={styles.label}>Customer Location</Text>
-        {/* <TextInput
+        <TextInput
           style={styles.input}
           value={customerLocation}
           placeholder="Current location will be set"
-          editable={false}
-        /> */}
-        <TouchableOpacity
+          onChangeText={setCustomerLocation}
+        />
+        {/* <TouchableOpacity
           style={styles.locationButton}
           onPress={getCurrentLocation}
         >
           <Ionicons name="location" size={20} color="white" />
           <Text style={styles.buttonText}>Set Location</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
 
         <Text style={styles.label}>Services</Text>
         <RNPickerSelect
@@ -226,7 +226,7 @@ const OrderEntryScreen = ({ navigation }) => {
         <Text style={styles.totalLabel}>Total: {isNaN(total) ? 'Invalid input' : `${total.toFixed(0)} ${currency}`}</Text>
 
 
-        <Modal
+        {/* <Modal
           animationType="slide"
           transparent={true}
           visible={modalVisible}
@@ -249,7 +249,7 @@ const OrderEntryScreen = ({ navigation }) => {
               </TouchableOpacity>
             </View>
           </View>:<ActivityIndicator/>}
-        </Modal>
+        </Modal> */}
       </ScrollView>
     );
   };

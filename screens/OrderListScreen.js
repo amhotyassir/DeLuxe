@@ -152,9 +152,9 @@ const OrderListScreen = ({ navigation }) => {
     );
   };
 
-  const handleOpenLocation = (locationUrl) => {
-    setLocationModalVisible(true);
-  };
+  // const handleOpenLocation = (locationUrl) => {
+  //   setLocationModalVisible(true);
+  // };
 
   const formatDateTime = (dateString) => {
     const date = new Date(dateString);
@@ -174,7 +174,6 @@ const OrderListScreen = ({ navigation }) => {
             toggleExpandOrder={toggleExpandOrder}
             handleStatusChange={handleStatusChange}
             handleDeleteOrder={handleDeleteOrder}
-            handleOpenLocation={handleOpenLocation}
             formatDateTime={formatDateTime}
             getStatusColor={getStatusColor}
             getNextStatusColor={getNextStatusColor}
@@ -183,7 +182,7 @@ const OrderListScreen = ({ navigation }) => {
         )}
       />
 
-      <Modal
+      {/* <Modal
         animationType="slide"
         transparent={true}
         visible={locationModalVisible}
@@ -203,7 +202,7 @@ const OrderListScreen = ({ navigation }) => {
             </TouchableOpacity>
           </View>
         </View>
-      </Modal>
+      </Modal> */}
     </View>
   );
 };
