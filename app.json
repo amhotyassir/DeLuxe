@@ -1,13 +1,13 @@
 {
   "expo": {
-    "name": "okhtoapp2",
-    "slug": "okhtoapp2",
+    "name": "laundro_luxe",
+    "slug": "laundromat_Deluxe",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/deluxe_icon_1024.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/logo_2778.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -16,15 +16,21 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/deluxe_icon_1024.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.yassiralmouhandis.laundromat_Deluxe"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/logo_250.png"
     },
     "plugins": [
       "expo-font"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "30cad1ad-cbc3-40ce-bec4-63c9cbedc90d"
+      }
+    }
   }
 }

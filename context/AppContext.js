@@ -1,7 +1,7 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import { database, storage } from '../services/firebaseConfig';
+import { database } from '../services/firebaseConfig';
 import { ref as dbRef, onValue, set, update } from 'firebase/database';
-import { ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import * as Notifications from 'expo-notifications';
 
 // Create the context
 const AppContext = createContext();
@@ -12,8 +12,10 @@ export const AppProvider = ({ children }) => {
   const [orders, setOrders] = useState([]);
   const [deliveredOrders, setDeliveredOrders] = useState([]);
   const [deletedOrders, setDeletedOrders] = useState([]);
+  const [costs, setCosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [services, setServices] = useState({});
+  const [admins, setAdmins] = useState({}); // State to manage admins
 
   useEffect(() => {
     // Listen for changes in the orders node
@@ -60,6 +62,29 @@ export const AppProvider = ({ children }) => {
         setServices({});
       }
     });
+
+    // Listen for changes in the costs node
+    const costsRef = dbRef(database, 'costs');
+    onValue(costsRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        setCosts(Object.keys(data).map(key => ({ id: key, ...data[key] })));
+      } else {
+        setCosts([]);
+      }
+    });
+
+    // Listen for changes in the admins node
+    const adminsRef = dbRef(database, 'admins');
+    onValue(adminsRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        setAdmins(data);
+      } else {
+        setAdmins({});
+      }
+    });
+
   }, []);
 
   const updateOrderStatus = (orderId, status) => {
@@ -77,12 +102,7 @@ export const AppProvider = ({ children }) => {
       if (order) {
         set(dbRef(database, `deleted/${orderId}`), { ...order, status });
         setOrders(orders.filter(o => o.id !== orderId));
-        // console.log(storageRef(storage,`orders/${orderId}`))
-        // deleteObject(storageRef(storage,`orders/${orderId}/`)).catch((error) => {
-        //   console.error('Failed to delete image:', error);
-        // });
         set(dbRef(database, `orders/${orderId}`), null); // Remove from orders
-        
       }
     } else {
       update(dbRef(database, `orders/${orderId}`), { status });
@@ -107,70 +127,73 @@ export const AppProvider = ({ children }) => {
     set(dbRef(database, `services/${newServiceKey}`), newService);
   };
 
+  const addOrder = async (newOrder) => {
+    const newOrderKey = `orders_${Date.now()}`;
+    newOrder.services.map(async(service,index)=>{
+      const imageUri = service.imageUri;
+      const imageRef = storageRef(storage, `orders/${newOrderKey}/${index}`);
+      const response = await fetch(imageUri);
+      const blob = await response.blob();
+      await uploadBytes(imageRef, blob);
+      const imageUrl = await getDownloadURL(imageRef);
+      delete service.imageUri;
+      service.imageUrl = imageUrl;
+      set(dbRef(database, `orders/${newOrderKey}/services/${index}`), service);
+      return service;
+    });
+    set(dbRef(database, `orders/${newOrderKey}`), newOrder);
+  };
 
   const updateService = async (serviceId, serviceData, hasImageChanged) => {
-    // console.log(serviceData)
     if (hasImageChanged) {
-      // console.log('here in updated service', serviceData)
-
       const imageRef = storageRef(storage, `services/${serviceId}`);
       const response = await fetch(serviceData.imageUri);
       const blob = await response.blob();
       await uploadBytes(imageRef, blob);
       serviceData.imageUrl = await getDownloadURL(imageRef);
-
-      // set(dbRef(database, `services/${serviceId}`), serviceData);
     }
     delete serviceData.imageUri;
     set(dbRef(database, `services/${serviceId}`), serviceData);
-    
-    
-  };
-  
-  const addOrder = async (newOrder) => {
-
-    const newOrderKey = `orders_${Date.now()}`;
-    // console.log(newOrder.services)
-    newOrder.services.map(async(service,index)=>{
-
-      const imageUri = service.imageUri
-
-      const imageRef = storageRef(storage, `orders/${newOrderKey}/${index}`);
-      // const imageUri = newOrder.se
-      const response = await fetch(imageUri);
-      const blob = await response.blob();
-      await uploadBytes(imageRef, blob);
-      const imageUrl = await getDownloadURL(imageRef);
-      delete service.imageUri
-
-      service.imageUrl = imageUrl
-      // console.log('This service = ', service)
-
-      set(dbRef(database, `orders/${newOrderKey}/services/${index}`), service);
-
-      return service
-      
-    })
-
-    set(dbRef(database, `orders/${newOrderKey}`), newOrder);
-
   };
 
   const removeService = (serviceId) => {
-    
-    if (services[serviceId].imageUrl){
-      // console.log(services[serviceId])
+    if (services[serviceId].imageUrl) {
       const imageRef = storageRef(storage, `services/${serviceId}`);
       deleteObject(imageRef).catch((error) => {
         console.error('Failed to delete image:', error);
       });
     }
-    
     set(dbRef(database, `services/${serviceId}`), null);
   };
 
+  const addCost = async (cost) => {
+    const newCostKey = `cost_${Date.now()}`;
+    set(dbRef(database, `costs/${newCostKey}`), cost);
+  };
+
+  const addAdmin = async (expoPushToken, data) => {
+console.log('registering' , data)
+    set(dbRef(database, `admins/${expoPushToken}`), data);
+  };
+
   return (
-    <AppContext.Provider value={{ orders, addOrder, deliveredOrders, deletedOrders, updateOrderStatus, loading, services, addService, updateService, removeService, currency }}>
+    <AppContext.Provider value={{ 
+      orders, 
+      addOrder, 
+      deliveredOrders, 
+      deletedOrders, 
+      updateOrderStatus, 
+      loading, 
+      services, 
+      addService, 
+      updateService, 
+      removeService, 
+      costs, 
+      addCost, 
+      currency, 
+      admins, 
+      addAdmin 
+    }}>
       {children}
     </AppContext.Provider>
   );

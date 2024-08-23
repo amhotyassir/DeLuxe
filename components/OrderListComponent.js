@@ -26,7 +26,7 @@ const OrderListComponent = ({
   }
   const renderServicesTable = (order_services) => {
 
-    let grandTotal=0
+   
     const detailedServices =  order_services.map((order_service, index) => {
 
       const key = order_service.id
@@ -35,7 +35,7 @@ const OrderListComponent = ({
       const total = service.type === 'perSquareMeter' 
         ? Number(order_service.length)* Number(order_service.width) * Number(service.price)
         : Number(order_service.quantity) * Number(service.price);
-      grandTotal = grandTotal + total
+     
       return (
         <View key={index + '/' + key} style={styles.serviceRow}>
           <Text style={styles.serviceCell}>{service.name}</Text>
@@ -56,7 +56,7 @@ const OrderListComponent = ({
 
     return <View>
       {detailedServices}
-      <Text style={styles.totalLabel}>{grandTotal}{currency}</Text>
+      
     </View>
 
   };
@@ -116,6 +116,7 @@ const OrderListComponent = ({
           <View style={styles.serviceTable}>
               
               {renderServicesTable(item.services)}
+              <Text style={styles.totalLabel}>{item.total}{currency}</Text>
             </View>
           <View style={styles.actions}>
             <TouchableOpacity

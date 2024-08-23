@@ -27,7 +27,7 @@ const OrderEntryScreen = ({ navigation }) => {
         </TouchableOpacity>
       ),
     });
-  }, [navigation, handleAddOrder, customerLocation, customerName, customerPhone, selectedServices]);
+  }, [navigation, handleAddOrder, customerLocation, customerName, customerPhone, selectedServices, total]);
 
   // const getCurrentLocation = async () => {
   //   let { status } = await Location.requestForegroundPermissionsAsync();
@@ -72,6 +72,7 @@ const OrderEntryScreen = ({ navigation }) => {
       services: selectedServices,
       status: 'New',
       orderDate: new Date().toISOString(),
+      total: total,
     };
 
     addOrder(newOrder)

@@ -1,13 +1,20 @@
 import React from 'react';
-import { ScrollView, StyleSheet } from 'react-native';
+import { ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
 import ManageServices from '../components/ManageServices';
-import ArchiveSection from '../components/ArchiveSection';
+// import ArchiveSection from '../components/ArchiveSection';
+import { useAppContext } from '../context/AppContext';
 
 const SettingsScreen = () => {
+  const {loading} = useAppContext()
+
+  if (loading) {
+    return <ActivityIndicator size="large" color="#0000ff" />;
+  }
+
   return (
     <ScrollView style={styles.container}>
       <ManageServices />
-      <ArchiveSection />
+      {/* <ArchiveSection /> */}
       {/* Add more sections here as needed */}
     </ScrollView>
   );

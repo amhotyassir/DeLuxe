@@ -30,7 +30,7 @@ const ArchiveSection = () => {
                 : Number(order_service.quantity) * Number(service.price);
             grandTotal = grandTotal + total
             return (
-                <View style={styles.serviceRow}>
+                <View key={`${index} _${key}`} style={styles.serviceRow}>
                     <Text style={styles.serviceCell}>{service.name}</Text>
                     <Text onPress={() => {
                         if (order_service.imageUrl) {
@@ -76,7 +76,7 @@ const ArchiveSection = () => {
                             {deletedOrders.length > 0 || deliveredOrders.length > 0 ? (
                                 <>
                                     {deletedOrders.map((item, index) => (
-                                        <View style={styles.details}>
+                                        <View key={`Deleted_${index}/${item.id}`} style={styles.details}>
                                             <View style={styles.row}>
                                                 <Text style={styles.label}>Full Name:</Text>
                                                 <Text style={styles.value}>{item.name}</Text>
@@ -89,8 +89,8 @@ const ArchiveSection = () => {
                                             </View>
                                             <View style={styles.row}>
                                                 <Text style={styles.label}>Location:</Text>
-                                                <Text onPress={() => handleOpenLocation(item.location)} style={[styles.value, styles.link]}>
-                                                    View
+                                                <Text style={[styles.value]}>
+                                                    {item.location}
                                                 </Text>
                                             </View>
 
@@ -123,7 +123,7 @@ const ArchiveSection = () => {
                                         </View>
                                     ))}
                                     {deliveredOrders.map((item, index) => (
-                                        <View style={styles.details}>
+                                        <View key={`Delivered_${index}/${item.id}`} style={styles.details}>
                                             <View style={styles.row}>
                                                 <Text style={styles.label}>Full Name:</Text>
                                                 <Text style={styles.value}>{item.name}</Text>
@@ -136,8 +136,8 @@ const ArchiveSection = () => {
                                             </View>
                                             <View style={styles.row}>
                                                 <Text style={styles.label}>Location:</Text>
-                                                <Text onPress={() => handleOpenLocation(item.location)} style={[styles.value, styles.link]}>
-                                                    View
+                                                <Text style={[styles.value]}>
+                                                    {item.location}
                                                 </Text>
                                             </View>
 
