@@ -44,7 +44,7 @@ const AnalyticsScreen = ({ initialStartDate = new Date(), initialEndDate = new D
     return (
         <View style={styles.container}>
             <ScrollView style={styles.scrollView}>
-                {/* <OverviewSection /> */}
+                <OverviewSection />
                 <Text style={styles.title}>Audit</Text>
                 <View style={styles.datePickerContainer}>
                     <TouchableOpacity
@@ -112,7 +112,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: 'gray',
+        backgroundColor: '#1E90FF',
         borderRadius: 8,
         padding: 10,
         width: width * 0.4,

@@ -1,7 +1,6 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { database } from '../services/firebaseConfig';
-import { ref as dbRef, onValue, set, update } from 'firebase/database';
-import * as Notifications from 'expo-notifications';
+import { ref as dbRef, onValue, set, remove, update } from 'firebase/database';
 
 // Create the context
 const AppContext = createContext();
@@ -15,7 +14,7 @@ export const AppProvider = ({ children }) => {
   const [costs, setCosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [services, setServices] = useState({});
-  const [admins, setAdmins] = useState({}); // State to manage admins
+  const [admins, setAdmins] = useState({});
 
   useEffect(() => {
     // Listen for changes in the orders node
@@ -87,25 +86,28 @@ export const AppProvider = ({ children }) => {
 
   }, []);
 
-  const updateOrderStatus = (orderId, status) => {
+  const updateOrderStatus = async (orderId, status) => {
     if (status === 'Delivered') {
       // Move order to delivered orders
       const order = orders.find(o => o.id === orderId);
+
       if (order) {
-        set(dbRef(database, `delivered/${orderId}`), { ...order, status });
+        await set(dbRef(database, `delivered/${orderId}`), { ...order, status });
+        setDeliveredOrders([...deliveredOrders, order])
         setOrders(orders.filter(o => o.id !== orderId));
-        set(dbRef(database, `orders/${orderId}`), null); // Remove from orders
+        await remove(dbRef(database, `orders/${orderId}`)); // Remove from orders
       }
     } else if (status === 'Deleted') {
       // Move order to deleted orders
       const order = orders.find(o => o.id === orderId);
       if (order) {
-        set(dbRef(database, `deleted/${orderId}`), { ...order, status });
+        await set(dbRef(database, `deleted/${orderId}`), { ...order, status });
+        setDeletedOrders([...deletedOrders, order])
         setOrders(orders.filter(o => o.id !== orderId));
-        set(dbRef(database, `orders/${orderId}`), null); // Remove from orders
+        await remove(dbRef(database, `orders/${orderId}`)); // Remove from orders
       }
     } else {
-      update(dbRef(database, `orders/${orderId}`), { status });
+      await update(dbRef(database, `orders/${orderId}`), { status });
     }
   };
 
@@ -124,12 +126,13 @@ export const AppProvider = ({ children }) => {
       await uploadBytes(imageRef, blob);
       newService.imageUrl = await getDownloadURL(imageRef);
     }
-    set(dbRef(database, `services/${newServiceKey}`), newService);
+    await set(dbRef(database, `services/${newServiceKey}`), newService);
+    setServices({...services, [newServiceKey]: newService})
   };
 
   const addOrder = async (newOrder) => {
     const newOrderKey = `orders_${Date.now()}`;
-    newOrder.services.map(async(service,index)=>{
+    newOrder.services.map(async (service, index) => {
       const imageUri = service.imageUri;
       const imageRef = storageRef(storage, `orders/${newOrderKey}/${index}`);
       const response = await fetch(imageUri);
@@ -138,10 +141,11 @@ export const AppProvider = ({ children }) => {
       const imageUrl = await getDownloadURL(imageRef);
       delete service.imageUri;
       service.imageUrl = imageUrl;
-      set(dbRef(database, `orders/${newOrderKey}/services/${index}`), service);
+      await set(dbRef(database, `orders/${newOrderKey}/services/${index}`), service);
       return service;
     });
-    set(dbRef(database, `orders/${newOrderKey}`), newOrder);
+    await set(dbRef(database, `orders/${newOrderKey}`), newOrder);
+    setOrders([...orders, {id: newOrderKey, ...newOrder}])
   };
 
   const updateService = async (serviceId, serviceData, hasImageChanged) => {
@@ -153,46 +157,51 @@ export const AppProvider = ({ children }) => {
       serviceData.imageUrl = await getDownloadURL(imageRef);
     }
     delete serviceData.imageUri;
-    set(dbRef(database, `services/${serviceId}`), serviceData);
+    await set(dbRef(database, `services/${serviceId}`), serviceData);
+    setServices({...services,[serviceId]: serviceData})
   };
 
-  const removeService = (serviceId) => {
+  const removeService = async (serviceId) => {
     if (services[serviceId].imageUrl) {
       const imageRef = storageRef(storage, `services/${serviceId}`);
-      deleteObject(imageRef).catch((error) => {
+      await deleteObject(imageRef).catch((error) => {
         console.error('Failed to delete image:', error);
       });
     }
-    set(dbRef(database, `services/${serviceId}`), null);
+    
+    await remove(dbRef(database, `services/${serviceId}`));
+    setServices((prev)=>{
+      delete prev.serviceId
+      return prev
+    })
   };
 
   const addCost = async (cost) => {
     const newCostKey = `cost_${Date.now()}`;
-    set(dbRef(database, `costs/${newCostKey}`), cost);
+
+    await set(dbRef(database, `costs/${newCostKey}`), cost);
+    setCosts((prevCosts) => [...prevCosts, { id: newCostKey, ...cost }]);
+
   };
 
-  const addAdmin = async (expoPushToken, data) => {
-console.log('registering' , data)
-    set(dbRef(database, `admins/${expoPushToken}`), data);
+  const deleteCost = async (costId) => {
+    await remove(dbRef(database, `costs/${costId}`));
+    setCosts((prevCosts)=> {
+      delete prevCosts.costId
+      return prevCosts
+    })
+  };
+
+  const addAdmin = async (adminId, adminData) => {
+    await set(dbRef(database, `admins/${adminId}`), adminData);
+    setAdmins((prev) => [...prev, { id: adminId, ...adminData }]);
+
   };
 
   return (
-    <AppContext.Provider value={{ 
-      orders, 
-      addOrder, 
-      deliveredOrders, 
-      deletedOrders, 
-      updateOrderStatus, 
-      loading, 
-      services, 
-      addService, 
-      updateService, 
-      removeService, 
-      costs, 
-      addCost, 
-      currency, 
-      admins, 
-      addAdmin 
+    <AppContext.Provider value={{
+      orders, addOrder, deliveredOrders, deletedOrders, updateOrderStatus, loading, services,
+      addService, updateService, removeService, costs, addCost, deleteCost, currency, admins, addAdmin
     }}>
       {children}
     </AppContext.Provider>

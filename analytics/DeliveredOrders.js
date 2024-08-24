@@ -15,7 +15,7 @@ const DeliveredOrders = ({ startDate, endDate }) => {
         const total = filtered.reduce((sum, order) => sum + order.total, 0);
         setTotalFilteredOrders(total);
         setFilteredOrders(filtered);
-    }, [startDate, endDate]);
+    }, [startDate, endDate, deliveredOrders]);
 
     const filterOrdersByDate = (orders) => {
         return orders.filter((order) => {

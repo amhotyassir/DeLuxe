@@ -2,14 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, ScrollView, Dimensions, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppContext } from '../context/AppContext';
-import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
-import Constants from 'expo-constants';
 
 const { width, height } = Dimensions.get('window');
 
 const ExpensesSection = ({ startDate, endDate }) => {
-    const { costs, addCost, currency, admins, addAdmin, loading } = useAppContext();
+    const { costs, addCost, currency, admins, addAdmin, loading, deleteCost } = useAppContext();
     const [modalVisible, setModalVisible] = useState(false);
     const [costName, setCostName] = useState('');
     const [costPrice, setCostPrice] = useState('');
@@ -46,7 +44,7 @@ const ExpensesSection = ({ startDate, endDate }) => {
         const total = filtered.reduce((sum, cost) => sum + Number(cost.price), 0);
         setTotalFilteredCosts(total);
         setFilteredCosts(filtered);
-    }, [startDate, endDate]);
+    }, [startDate, endDate, costs]);
 
     const filterCostsByDate = (costs) => {
         if (!startDate || !endDate) return costs;
@@ -79,10 +77,9 @@ const ExpensesSection = ({ startDate, endDate }) => {
         }
 
         const newCost = {
-            id: Date.now(),
             name: costName,
-            price: costPrice,
-            date: new Date().toLocaleDateString('en-GB'),
+            price: Number(costPrice),
+            date: new Date().toISOString(),
             user: showNameInput ? userName : admins[extractFromExpoToken(expoPushToken)].name,
         };
 
@@ -91,6 +88,12 @@ const ExpensesSection = ({ startDate, endDate }) => {
         setCostPrice('');
         setModalVisible(false);
         setShowNameInput(false);
+        
+    };
+
+    const handleDeleteCost = (costId) => {
+        deleteCost(costId);
+        
     };
 
     const renderCosts = (costsToRender) => {
@@ -116,6 +119,13 @@ const ExpensesSection = ({ startDate, endDate }) => {
                     <Text style={styles.label}>User:</Text>
                     <Text style={styles.value}>{cost.user}</Text>
                 </View>
+                <TouchableOpacity
+                    style={styles.deleteButton}
+                    onPress={() => handleDeleteCost(cost.id)}
+                >
+                    <Ionicons name="trash" size={20} color="white" />
+                    <Text style={styles.buttonText}>Delete</Text>
+                </TouchableOpacity>
             </View>
         ));
     };
@@ -181,7 +191,7 @@ const ExpensesSection = ({ startDate, endDate }) => {
                             onPress={() => setModalVisible(false)}
                         >
                             <Ionicons name="close-circle" size={24} color="white" />
-                            <Text style={styles.buttonText}>Close</Text>
+                            <Text style={styles.buttonText}>Cancel</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -208,7 +218,6 @@ const styles = StyleSheet.create({
     sectionTitle: {
         fontSize: 24,
         fontWeight: 'bold',
-        marginBottom: 16,
         textAlign: 'center',
     },
     totalText: {
@@ -289,7 +298,7 @@ const styles = StyleSheet.create({
     },
     value: {
         width: '60%',
-        textAlign: 'center',
+        textAlign: 'left',
     },
     noCostsText: {
         fontSize: 16,
@@ -304,6 +313,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#FF0000',
         borderRadius: 8,
         padding: 5,
+        alignSelf:'baseline'
     },
     button: {
         flexDirection: 'row',
@@ -314,6 +324,17 @@ const styles = StyleSheet.create({
         backgroundColor: '#32cd32',
         marginBottom: 10,
     },
+    deleteButton:{
+        flexDirection: 'row',
+        alignSelf:'center',
+        justifyContent:'center',
+        alignItems:"center",
+        backgroundColor:'#FF0000',
+        padding: 8,
+        marginTop:8,
+        borderRadius:8
+    }
+    
 });
 
 export default ExpensesSection;

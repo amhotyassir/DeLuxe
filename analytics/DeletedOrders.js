@@ -26,8 +26,7 @@ const DeletedOrders = ({ startDate, endDate }) => {
         },0);
         setTotalFilteredOrders(total);
         setFilteredOrders(filtered)
-        console.log('here')
-    }, [startDate, endDate]);
+    }, [startDate, endDate, deletedOrders]);
 
     const filterOrdersByDate = (orders) => {
         return orders.filter((order) => {
