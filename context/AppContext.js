@@ -180,21 +180,15 @@ export const AppProvider = ({ children }) => {
     const newCostKey = `cost_${Date.now()}`;
 
     await set(dbRef(database, `costs/${newCostKey}`), cost);
-    setCosts((prevCosts) => [...prevCosts, { id: newCostKey, ...cost }]);
 
   };
 
   const deleteCost = async (costId) => {
     await remove(dbRef(database, `costs/${costId}`));
-    setCosts((prevCosts)=> {
-      delete prevCosts.costId
-      return prevCosts
-    })
   };
 
   const addAdmin = async (adminId, adminData) => {
     await set(dbRef(database, `admins/${adminId}`), adminData);
-    setAdmins((prev) => [...prev, { id: adminId, ...adminData }]);
 
   };
 

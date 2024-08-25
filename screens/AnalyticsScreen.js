@@ -6,6 +6,7 @@ import OverviewSection from '../analytics/OverviewSection';
 import ExpensesSection from '../analytics/ExpensesSection';
 import DeliveredOrders from '../analytics/DeliveredOrders';
 import DeletedOrders from '../analytics/DeletedOrders';
+import { useAppContext } from '../context/AppContext';
 
 const { width, height } = Dimensions.get('window');
 
@@ -23,7 +24,9 @@ const setEndOfDay = (date) => {
 };
 
 const AnalyticsScreen = ({ initialStartDate = new Date(), initialEndDate = new Date() }) => {
-    // Setting start and end date with time adjustments
+
+    // Setting start and end date with time adjustments 
+    const {loading}=useAppContext()
     const [startDate, setStartDate] = useState(setStartOfDay(initialStartDate));
     const [endDate, setEndDate] = useState(setEndOfDay(initialEndDate));
     const [showStartPicker, setShowStartPicker] = useState(false);
@@ -41,6 +44,9 @@ const AnalyticsScreen = ({ initialStartDate = new Date(), initialEndDate = new D
         setEndDate(setEndOfDay(currentDate));
     };
 
+    if (loading) {
+        return <ActivityIndicator size="large" color="#0000ff" />;
+      }
     return (
         <View style={styles.container}>
             <ScrollView style={styles.scrollView}>
